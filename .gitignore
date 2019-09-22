@@ -1,4 +1,6 @@
+# Personal Info
 config.py
+playlist_return.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
