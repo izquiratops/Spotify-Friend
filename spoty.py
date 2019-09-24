@@ -39,3 +39,8 @@ def add_song(spotify_token, playlist_id, song_id):
 	sp = spotipy.Spotify(auth=spotify_token)
 	sp.trace = False
 	sp.user_playlist_add_tracks(config.spotify_username, playlist_id, [song_id])
+
+def search_songs(spotify_token, song_string):
+	sp = spotipy.Spotify(auth=spotify_token)
+	res = sp.search(song_string, type='track')
+	return res

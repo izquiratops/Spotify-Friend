@@ -1,8 +1,8 @@
-# Telegram-API
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import logging
-
-import spoty, config, json
+from urllib.request import Request, urlopen
+from bs4 import BeautifulSoup
+import spoty, config, json, re
 
 def help(update, context):
 	message = "List of commands:\n/create_playlist\n/get_link\n\n(I'm not gonna explain this shit, this is so self-explanatory)"
@@ -38,8 +38,43 @@ def get_link(update, context):
 		context.bot.send_message(chat_id=update.message.chat_id, text='Playlist not found')
 
 def read_message(update, context):
-	if 'open.spotify.com/' in update.message.text and update.effective_chat.id in config.whitelist:
+	if update.effective_chat.id not in config.whitelist: return
+
+	if 'open.spotify.com/' in update.message.text:
 		song_id = update.message.text.split('/')[-1].split('?si=')[0]
+
+	elif 'youtu.be/' in update.message.text or 'www.youtube.' in update.message.text:
+		webpage = urlopen(Request(update.message.text)).read()
+
+		soup = BeautifulSoup(webpage, 'html.parser')
+		html = soup.prettify('utf-8')
+		for span in soup.findAll('span',attrs={'class': 'watch-title'}):
+			video_title = span.text.strip()
+
+		# Se filtra el título para tener el maldito nombre
+		video_title = re.sub('\(.*?\)', '', video_title)
+		video_title = re.sub('\[.*?\]', '', video_title)
+		video_title = video_title.title()
+		video_title = re.sub('[^a-zA-Z0-9\._-]', ' ', video_title)
+		video_title = re.sub(' +', ' ', video_title)
+		video_title = video_title.rsplit('Feat', 1)[0]
+		video_title = video_title.rsplit('Ft', 1)[0]
+
+		if video_title[0] == ' ':
+			video_title = video_title[1:]
+		if video_title[-1] == ' ':
+			video_title = video_title[:-1]
+
+		res = spoty.search_songs(spotify_token, video_title)
+		tracks = res['tracks']['items']
+
+		if len(tracks) == 0:
+			return
+		for track in tracks:
+			if track['name'].title() in video_title:
+				song_id = track['id']
+				break
+
 	else:
 		return
 
