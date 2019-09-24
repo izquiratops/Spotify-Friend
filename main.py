@@ -24,13 +24,21 @@ def create_playlist(update, context):
 def get_link(update, context):
 	with open('playlist_return.json') as file:
 		data = json.load(file)
-		message = data['external_urls']['spotify']
+		playlist_local_url = data['external_urls']['spotify']
+		playlist_local_name = data['name']
 
-	if message:
-		context.bot.send_message(chat_id=update.message.chat_id, text=message)
+	if playlist_local_url:
+		ret = spoty.show_playlists(spotify_token, config.spotify_username)
+
+		for playlist in ret:
+			if playlist[1] == playlist_local_name:
+				context.bot.send_message(chat_id=update.message.chat_id, text=playlist_local_url)
+				return
+
+		context.bot.send_message(chat_id=update.message.chat_id, text='Playlist not found')
 
 def read_message(update, context):
-	if 'open.spotify.com/' in update.message.text:
+	if 'open.spotify.com/' in update.message.text and update.effective_chat.id in config.whitelist:
 		song_id = update.message.text.split('/')[-1].split('?si=')[0]
 	else:
 		return
