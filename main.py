@@ -59,6 +59,7 @@ def read_message(update, context):
 		video_title = re.sub(' +', ' ', video_title)
 		video_title = video_title.rsplit('Feat', 1)[0]
 		video_title = video_title.rsplit('Ft', 1)[0]
+		video_title = video_title.rsplit('By', 1)[0]
 
 		if video_title[0] == ' ':
 			video_title = video_title[1:]
